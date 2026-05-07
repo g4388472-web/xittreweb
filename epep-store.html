@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EPEP File Store</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f1a;
+    --surface: #141728;
+    --surface2: #1c2036;
+    --border: #ffffff10;
+    --accent: #00e5ff;
+    --accent2: #ff6b35;
+    --purple: #a855f7;
+    --green: #00e676;
+    --text: #eef0ff;
+    --muted: #7a82aa;
+    --wa: #25D366;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BG GRID */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(#ffffff05 1px, transparent 1px),
+      linear-gradient(90deg, #ffffff05 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* GLOW BLOBS */
+  .blob1 {
+    position: fixed;
+    top: -150px; left: -150px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, #00e5ff18, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+  .blob2 {
+    position: fixed;
+    bottom: -100px; right: -100px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, #a855f718, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: #0d0f1aee;
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .nav-logo {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .nav-logo .ep { color: var(--accent); }
+  .nav-logo .ep2 { color: var(--purple); }
+
+  .nav-right {
+    display: flex; align-items: center; gap: 16px;
+  }
+
+  .nav-badge {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .online-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: blink 1.5s infinite;
+  }
+
+  /* HERO */
+  .hero {
+    position: relative; z-index: 1;
+    padding: 70px 32px 60px;
+    text-align: center;
+  }
+
+  .hero-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #00e5ff12;
+    border: 1px solid #00e5ff30;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 6px 18px;
+    border-radius: 50px;
+    margin-bottom: 20px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .hero h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(40px, 8vw, 80px);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    margin-bottom: 16px;
+    animation: fadeUp 0.5s ease 0.1s both;
+  }
+
+  .hero h1 .cyan { color: var(--accent); text-shadow: 0 0 30px #00e5ff60; }
+  .hero h1 .pur { color: var(--purple); text-shadow: 0 0 30px #a855f760; }
+
+  .hero p {
+    font-size: 15px;
+    color: var(--muted);
+    max-width: 460px;
+    margin: 0 auto 32px;
+    line-height: 1.7;
+    animation: fadeUp 0.5s ease 0.2s both;
+  }
+
+  .hero-stats {
+    display: flex; justify-content: center; gap: 32px; flex-wrap: wrap;
+    animation: fadeUp 0.5s ease 0.3s both;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .stat-label { font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+
+  /* SECTION */
+  .section {
+    position: relative; z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 32px 64px;
+  }
+
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 28px; flex-wrap: wrap; gap: 12px;
+  }
+
+  .section-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--text);
+    text-transform: uppercase;
+  }
+
+  .section-title span { color: var(--accent); }
+
+  /* GRID */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    animation: fadeUp 0.5s ease both;
+    position: relative;
+  }
+
+  .card:hover {
+    border-color: #00e5ff30;
+    transform: translateY(-5px);
+    box-shadow: 0 20px 50px #00000050, 0 0 30px #00e5ff10;
+  }
+
+  .card-top {
+    padding: 28px 24px 20px;
+    display: flex; align-items: flex-start; gap: 16px;
+    position: relative;
+  }
+
+  .file-icon {
+    width: 56px; height: 56px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .card-info { flex: 1; }
+
+  .file-type {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .file-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+
+  .file-size {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .card-badge {
+    position: absolute;
+    top: 16px; right: 16px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 50px;
+  }
+
+  .card-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0 24px;
+  }
+
+  .card-desc {
+    padding: 16px 24px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .card-tags {
+    padding: 0 24px 16px;
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+
+  .tag {
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 50px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  .card-footer {
+    padding: 16px 24px;
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+  }
+
+  .price-block {}
+
+  .price-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+  .price-val {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .buy-btn {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--wa);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+  }
+
+  .buy-btn:hover {
+    transform: scale(1.06);
+    box-shadow: 0 8px 24px #25D36650;
+  }
+
+  .buy-btn:active { transform: scale(0.97); }
+
+  .wa-icon { font-size: 18px; }
+
+  /* COLOR THEMES PER CARD */
+  .t-cyan .file-icon { background: #00e5ff15; border: 1px solid #00e5ff30; }
+  .t-cyan .file-type { color: var(--accent); }
+  .t-cyan .price-val { color: var(--accent); }
+  .t-cyan .card-badge { background: #00e5ff20; color: var(--accent); border: 1px solid #00e5ff40; }
+
+  .t-purple .file-icon { background: #a855f715; border: 1px solid #a855f730; }
+  .t-purple .file-type { color: var(--purple); }
+  .t-purple .price-val { color: var(--purple); }
+  .t-purple .card-badge { background: #a855f720; color: #c084fc; border: 1px solid #a855f740; }
+
+  .t-orange .file-icon { background: #ff6b3515; border: 1px solid #ff6b3530; }
+  .t-orange .file-type { color: var(--accent2); }
+  .t-orange .price-val { color: var(--accent2); }
+  .t-orange .card-badge { background: #ff6b3520; color: var(--accent2); border: 1px solid #ff6b3540; }
+
+  .t-green .file-icon { background: #00e67615; border: 1px solid #00e67630; }
+  .t-green .file-type { color: var(--green); }
+  .t-green .price-val { color: var(--green); }
+  .t-green .card-badge { background: #00e67620; color: var(--green); border: 1px solid #00e67640; }
+
+  .t-pink .file-icon { background: #ff409015; border: 1px solid #ff409030; }
+  .t-pink .file-type { color: #ff6eb4; }
+  .t-pink .price-val { color: #ff6eb4; }
+  .t-pink .card-badge { background: #ff409020; color: #ff6eb4; border: 1px solid #ff409040; }
+
+  .t-gold .file-icon { background: #ffd70015; border: 1px solid #ffd70030; }
+  .t-gold .file-type { color: #ffd700; }
+  .t-gold .price-val { color: #ffd700); }
+  .t-gold .price-val { color: #ffd700; }
+  .t-gold .card-badge { background: #ffd70020; color: #ffd700; border: 1px solid #ffd70040; }
+
+  .tag-cyan { background: #00e5ff15; color: var(--accent); border: 1px solid #00e5ff25; }
+  .tag-purple { background: #a855f715; color: #c084fc; border: 1px solid #a855f725; }
+  .tag-orange { background: #ff6b3515; color: var(--accent2); border: 1px solid #ff6b3525; }
+  .tag-green { background: #00e67615; color: var(--green); border: 1px solid #00e67625; }
+  .tag-pink { background: #ff409015; color: #ff6eb4; border: 1px solid #ff409025; }
+  .tag-gold { background: #ffd70015; color: #ffd700; border: 1px solid #ffd70025; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--wa);
+    color: white;
+    padding: 14px 28px;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 700;
+    z-index: 999;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+    box-shadow: 0 8px 32px #25D36650;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* FOOTER */
+  footer {
+    position: relative; z-index: 1;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 40px 32px;
+    text-align: center;
+  }
+
+  .footer-logo {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  footer p { font-size: 13px; color: var(--muted); line-height: 2; }
+
+  .footer-wa {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #25D36620;
+    border: 1px solid #25D36640;
+    color: var(--wa);
+    padding: 8px 20px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 700;
+    margin-top: 16px;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .footer-wa:hover { background: var(--wa); color: white; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  @media (max-width: 600px) {
+    nav { padding: 0 16px; }
+    .hero { padding: 50px 16px 40px; }
+    .section { padding: 0 16px 48px; }
+    .grid { grid-template-columns: 1fr; }
+    .hero-stats { gap: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="blob1"></div>
+<div class="blob2"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo"><span class="ep">EP</span><span class="ep2">EP</span> Store</div>
+  <div class="nav-right">
+    <div class="nav-badge">
+      <span class="online-dot"></span>
+      Toko Online
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">⚡ File Digital Store</div>
+  <h1><span class="cyan">EPEP</span><br><span class="pur">File Store</span></h1>
+  <p>Koleksi file digital berkualitas tinggi. Harga terjangkau, langsung kirim via WhatsApp. Fast response!</p>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-num">6+</div>
+      <div class="stat-label">File Tersedia</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">Fast</div>
+      <div class="stat-label">Pengiriman</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">24/7</div>
+      <div class="stat-label">Support WA</div>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+<section class="section">
+  <div class="section-head">
+    <div class="section-title">⚡ <span>Semua</span> File</div>
+  </div>
+
+  <div class="grid">
+
+    <!-- FILE 1 - 5K -->
+    <div class="card t-cyan" style="animation-delay:0.05s">
+      <div class="card-top">
+        <div class="file-icon">🎮</div>
+        <div class="card-info">
+          <div class="file-type">Game File</div>
+          <div class="file-name">EPEP Starter Pack</div>
+          <div class="file-size">📦 Paket Pemula</div>
+        </div>
+        <div class="card-badge">BASIC</div>
+      </div>
+      <div class="card-divider"></div>
+      <div class="card-desc">File EP EP starter pack lengkap untuk pemula. Cocok buat yang baru mulai, sudah include semua yang dibutuhkan.</div>
+      <div class="card-tags">
+        <span class="tag tag-cyan">Starter</span>
+        <span class="tag tag-cyan">Pemula</span>
+        <span class="tag tag-cyan">Lengkap</span>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-label">Harga</div>
+          <div class="price-val">Rp 5.000</div>
+        </div>
+        <button class="buy-btn" onclick="beliWA('EPEP Starter Pack', 'Rp 5.000')">
+          <span class="wa-icon">💬</span> Beli via WA
+        </button>
+      </div>
+    </div>
+
+    <!-- FILE 2 - 10K -->
+    <div class="card t-purple" style="animation-delay:0.1s">
+      <div class="card-top">
+        <div class="file-icon">🗂️</div>
+        <div class="card-info">
+          <div class="file-type">Bundle File</div>
+          <div class="file-name">EPEP Bundle Vol.1</div>
+          <div class="file-size">📦 Bundle Paket</div>
+        </div>
+        <div class="card-badge">🔥 LARIS</div>
+      </div>
+      <div class="card-divider"></div>
+      <div class="card-desc">Bundle file EP EP volume pertama. Isi lengkap dan siap pakai, sudah diuji dan terjamin kualitasnya.</div>
+      <div class="card-tags">
+        <span class="tag tag-purple">Bundle</span>
+        <span class="tag tag-purple">Vol.1</span>
+        <span class="tag tag-purple">Ready</span>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-label">Harga</div>
+          <div class="price-val">Rp 10.000</div>
+        </div>
+        <button class="buy-btn" onclick="beliWA('EPEP Bundle Vol.1', 'Rp 10.000')">
+          <span class="wa-icon">💬</span> Beli via WA
+        </button>
+      </div>
+    </div>
+
+    <!-- FILE 3 - 15K -->
+    <div class="card t-orange" style="animation-delay:0.15s">
+      <div class="card-top">
+        <div class="file-icon">⚙️</div>
+        <div class="card-info">
+          <div class="file-type">Config File</div>
+          <div class="file-name">EPEP Config Pro</div>
+          <div class="file-size">📦 Konfigurasi Pro</div>
+        </div>
+        <div class="card-badge">PRO</div>
+      </div>
+      <div class="card-divider"></div>
+      <div class="card-desc">File konfigurasi EP EP versi pro. Setting sudah dioptimalkan untuk performa terbaik, plug and play.</div>
+      <div class="card-tags">
+        <span class="tag tag-orange">Config</span>
+        <span class="tag tag-orange">Pro</span>
+        <span class="tag tag-orange">Optimized</span>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-label">Harga</div>
+          <div class="price-val">Rp 15.000</div>
+        </div>
+        <button class="buy-btn" onclick="beliWA('EPEP Config Pro', 'Rp 15.000')">
+          <span class="wa-icon">💬</span> Beli via WA
+        </button>
+      </div>
+    </div>
+
+    <!-- FILE 4 - 20K -->
+    <div class="card t-green" style="animation-delay:0.2s">
+      <div class="card-top">
+        <div class="file-icon">📁</div>
+        <div class="card-info">
+          <div class="file-type">Full Package</div>
+          <div class="file-name">EPEP Full Pack</div>
+          <div class="file-size">📦 Paket Lengkap</div>
+        </div>
+        <div class="card-badge">✨ NEW</div>
+      </div>
+      <div class="card-divider"></div>
+      <div class="card-desc">Paket full EP EP terlengkap. Semua file sudah include dalam satu paket, update gratis untuk versi berikutnya.</div>
+      <div class="card-tags">
+        <span class="tag tag-green">Full</span>
+        <span class="tag tag-green">Update</span>
+        <span class="tag tag-green">Terlengkap</span>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-label">Harga</div>
+          <div class="price-val">Rp 20.000</div>
+        </div>
+        <button class="buy-btn" onclick="beliWA('EPEP Full Pack', 'Rp 20.000')">
+          <span class="wa-icon">💬</span> Beli via WA
+        </button>
+      </div>
+    </div>
+
+    <!-- FILE 5 - 25K -->
+    <div class="card t-pink" style="animation-delay:0.25s">
+      <div class="card-top">
+        <div class="file-icon">💎</div>
+        <div class="card-info">
+          <div class="file-type">Premium File</div>
+          <div class="file-name">EPEP Premium</div>
+          <div class="file-size">📦 Edisi Premium</div>
+        </div>
+        <div class="card-badge">⭐ PREMIUM</div>
+      </div>
+      <div class="card-divider"></div>
+      <div class="card-desc">File EP EP edisi premium eksklusif. Konten lebih lengkap, kualitas lebih tinggi, support prioritas via WA.</div>
+      <div class="card-tags">
+        <span class="tag tag-pink">Premium</span>
+        <span class="tag tag-pink">Eksklusif</span>
+        <span class="tag tag-pink">Support</span>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-label">Harga</div>
+          <div class="price-val">Rp 25.000</div>
+        </div>
+        <button class="buy-btn" onclick="beliWA('EPEP Premium', 'Rp 25.000')">
+          <span class="wa-icon">💬</span> Beli via WA
+        </button>
+      </div>
+    </div>
+
+    <!-- FILE 6 - 30K -->
+    <div class="card t-gold" style="animation-delay:0.3s">
+      <div class="card-top">
+        <div class="file-icon">👑</div>
+        <div class="card-info">
+          <div class="file-type">Ultimate File</div>
+          <div class="file-name">EPEP Ultimate</div>
+          <div class="file-size">📦 Paket Ultimate</div>
+        </div>
+        <div class="card-badge">👑 ULTIMATE</div>
+      </div>
+      <div class="card-divider"></div>
+      <div class="card-desc">Paket ultimate EP EP terbaik dan terlengkap. Semua versi include, bonus file ekstra, garansi kepuasan.</div>
+      <div class="card-tags">
+        <span class="tag tag-gold">Ultimate</span>
+        <span class="tag tag-gold">Bonus</span>
+        <span class="tag tag-gold">Garansi</span>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-label">Harga</div>
+          <div class="price-val">Rp 30.000</div>
+        </div>
+        <button class="buy-btn" onclick="beliWA('EPEP Ultimate', 'Rp 30.000')">
+          <span class="wa-icon">💬</span> Beli via WA
+        </button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo"><span style="color:var(--accent)">EP</span><span style="color:var(--purple)">EP</span> Store</div>
+  <p>
+    Fast response · Pengiriman langsung via WhatsApp<br>
+    © 2025 EPEP Store. All rights reserved.
+  </p>
+  <a class="footer-wa" href="https://wa.me/6283114379759" target="_blank">
+    💬 Chat Admin WA
+  </a>
+</footer>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  const WA_NUMBER = '6283114379759';
+
+  function beliWA(nama, harga) {
+    const pesan =
+      `Halo Admin! 👋\n\n` +
+      `🛒 *PESANAN BARU*\n` +
+      `━━━━━━━━━━━━━━━━\n` +
+      `📦 *Produk:* ${nama}\n` +
+      `💰 *Harga:* ${harga}\n` +
+      `💳 *Payment:* Transfer Bank / QRIS / GoPay / OVO / Dana\n` +
+      `━━━━━━━━━━━━━━━━\n` +
+      `Mohon konfirmasi ketersediaan dan info pembayaran. Terima kasih! 🙏`;
+
+    const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(pesan)}`;
+    window.open(url, '_blank');
+
+    showToast('💬 Membuka WhatsApp...');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+</script>
+</body>
+</html>
